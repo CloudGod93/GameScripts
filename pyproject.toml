@@ -1,0 +1,14 @@
+[project]
+name = "gamescripts"
+version = "0.1.0"
+description = "AI-powered solvers for word games (Contexto, Wordle, and more)"
+requires-python = ">=3.10"
+dependencies = [
+    "anthropic",
+    "requests",
+    "rich",
+    "python-dotenv",
+]
+
+[project.scripts]
+contexto = "contexto.solver:main"
