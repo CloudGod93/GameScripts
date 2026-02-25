@@ -43,6 +43,7 @@ WORDLE_API_URL = "https://www.nytimes.com/svc/wordle/v2/{date}.json"
 MODELS = {
     "sonnet": "claude-sonnet-4-6",
     "opus": "claude-opus-4-6",
+    "haiku": "claude-haiku-4-5",
 }
 DEFAULT_MODEL = "sonnet"
 CLAUDE_MODEL = MODELS[DEFAULT_MODEL]  # set by main() via --model flag
