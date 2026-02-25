@@ -11,6 +11,8 @@ __pycache__/
 *.egg-info/
 dist/
 build/
+.python-version
+*.log
 
 # IDE
 .vscode/

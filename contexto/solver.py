@@ -2,15 +2,15 @@
 """
 solver.py — Claude-powered solver for contexto.me
 
-Usage:
-    python -m contexto.solver                     # solve today's game
-    python -m contexto.solver --game 1200         # solve specific game #
-    python -m contexto.solver --game 1200 --max-guesses 150
-    python -m contexto.solver --lang pt           # Portuguese version
+Usage (after pip install -e .):
+    contexto-solver                     # solve today's game
+    contexto-solver --game 1200         # solve specific game #
+    contexto-solver --game 1200 --max-guesses 150
+    contexto-solver --lang pt           # Portuguese version
 
-    # or run directly:
-    python contexto/solver.py
-    python contexto/solver.py --game 1200
+Or run as module:
+    python -m contexto.solver
+    python -m contexto.solver --game 1200
 """
 
 import argparse
@@ -671,10 +671,10 @@ def main():
         formatter_class=argparse.RawDescriptionHelpFormatter,
         epilog="""
 Examples:
-  python contexto_solver.py                      # today's game
-  python contexto_solver.py --game 1200          # specific game
-  python contexto_solver.py --game 1200 --max-guesses 100
-  python contexto_solver.py --lang pt            # Portuguese
+  contexto-solver                      # today's game
+  contexto-solver --game 1200          # specific game
+  contexto-solver --game 1200 --max-guesses 100
+  contexto-solver --lang pt            # Portuguese
         """,
     )
     parser.add_argument("--game", "-g", type=int, default=None,
@@ -687,10 +687,10 @@ Examples:
                         help="Anthropic API key (default: from .env)")
     args = parser.parse_args()
 
-    api_key = args.api_key or os.environ.get("ANTHROPIC_API_KEY")
+    api_key = args.api_key or os.environ.get("API_KEY")
     if not api_key:
         console.print("[red]Error: Anthropic API key required.[/red]")
-        console.print("Add ANTHROPIC_API_KEY to .env file, set env var, or pass --api-key")
+        console.print("Add API_KEY to .env file, set env var, or pass --api-key")
         sys.exit(1)
 
     game_id = args.game if args.game is not None else get_current_game_id()
