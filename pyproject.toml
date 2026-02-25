@@ -16,6 +16,7 @@ dependencies = [
 
 [project.scripts]
 contexto-solver = "contexto.solver:main"
+wordle-solver = "wordle.solver:main"
 
 [tool.hatch.build.targets.wheel]
-packages = ["contexto"]
+packages = ["contexto", "wordle"]

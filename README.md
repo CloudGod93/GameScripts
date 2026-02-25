@@ -13,7 +13,7 @@
 | Game | Status | Description |
 |------|--------|-------------|
 | [🧠 Contexto](contexto/) | ✅ Working | Solves [contexto.me](https://contexto.me) — guess the secret word by semantic distance |
-| 🟩 Wordle | 🕐 Planned | Coming soon |
+| [🟩 Wordle](wordle/) | ✅ Working | Solves [NYT Wordle](https://www.nytimes.com/games/wordle) — 5-letter word in 6 guesses with color feedback |
 
 ---
 
@@ -48,6 +48,39 @@ Contexto releases a new game daily. Game numbers increment by 1 each day:
 - **Today's game** = anchor + days since anchor
 
 The solver auto-calculates today's game number. Use `--game` to solve a past or specific game.
+
+---
+
+## 🟩 Wordle Solver
+
+The Wordle solver uses Claude to play [NYT Wordle](https://www.nytimes.com/games/wordle). It fetches the daily puzzle, then has Claude guess the 5-letter word with real green/yellow/gray feedback — just like a human would play.
+
+### How it works
+
+1. **📡 Fetch puzzle** — Pulls today's answer from the NYT Wordle API (hidden from Claude)
+2. **🤖 Claude plays** — Each turn, Claude picks a 5-letter word based on all previous feedback
+3. **🎯 Evaluate** — The guess is scored against the answer:
+   - 🟩 **Green** — correct letter, correct position
+   - 🟨 **Yellow** — correct letter, wrong position
+   - ⬛ **Gray** — letter not in the word
+4. **🔁 Repeat** — Feedback and constraints are sent back to Claude (up to 6 guesses)
+5. **📊 Share grid** — Win or lose, prints the emoji share grid
+
+### 📺 Terminal UI
+
+Rich live board with:
+- Color-coded letter tiles (green/yellow/gray) just like the real game
+- Mini keyboard showing known letter states
+- Empty rows for remaining guesses
+- Supports hard mode (`--hard`)
+
+### 🔢 Puzzle dates
+
+Wordle uses calendar dates instead of game numbers:
+
+- **Puzzle #1** = June 19, 2021
+- **Today's puzzle** = auto-detected by date
+- Use `--date YYYY-MM-DD` to solve any past puzzle
 
 ---
 
@@ -86,6 +119,14 @@ contexto-solver --game 1200              # solve a specific game
 contexto-solver --game 1200 --max-guesses 100
 contexto-solver --lang pt                # Portuguese
 contexto-solver --api-key sk-ant-...     # pass key directly (optional)
+```
+
+### Wordle
+```bash
+wordle-solver                            # solve today's puzzle
+wordle-solver --date 2026-01-15          # solve a specific date
+wordle-solver --hard                     # hard mode
+wordle-solver --date 2026-01-15 --hard   # specific date + hard mode
 ```
 
 ---
