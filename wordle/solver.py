@@ -40,7 +40,12 @@ from rich import box
 # ─────────────────────────────────────────────────────────────────────────────
 
 WORDLE_API_URL = "https://www.nytimes.com/svc/wordle/v2/{date}.json"
-CLAUDE_MODEL = "claude-sonnet-4-6"
+MODELS = {
+    "sonnet": "claude-sonnet-4-6",
+    "opus": "claude-opus-4-6",
+}
+DEFAULT_MODEL = "sonnet"
+CLAUDE_MODEL = MODELS[DEFAULT_MODEL]  # set by main() via --model flag
 MAX_GUESSES = 6
 WORD_LENGTH = 5
 
@@ -466,17 +471,25 @@ def main():
 Examples:
   wordle-solver                          # today's puzzle
   wordle-solver --date 2026-01-15        # specific date
+  wordle-solver --model opus             # use Claude Opus
   wordle-solver --hard                   # hard mode
   wordle-solver --date 2026-01-15 --hard
         """,
     )
     parser.add_argument("--date", "-d", type=str, default=None,
                         help="Puzzle date as YYYY-MM-DD (default: today)")
+    parser.add_argument("--model", type=str, default=DEFAULT_MODEL,
+                        choices=MODELS.keys(),
+                        help=f"Claude model to use (default: {DEFAULT_MODEL})")
     parser.add_argument("--hard", action="store_true",
                         help="Enable hard mode (must reuse revealed hints)")
     parser.add_argument("--api-key", "-k", type=str, default=None,
                         help="Anthropic API key (default: from .env)")
     args = parser.parse_args()
+
+    # Set the model globally
+    global CLAUDE_MODEL
+    CLAUDE_MODEL = MODELS[args.model]
 
     api_key = args.api_key or os.environ.get("API_KEY")
     if not api_key:

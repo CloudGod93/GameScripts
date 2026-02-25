@@ -46,7 +46,12 @@ CONTEXTO_BASE_URL = "https://api.contexto.me/machado/{lang}/game/{game_id}/{word
 ANCHOR_GAME_ID = 1256
 ANCHOR_DATE = datetime(2026, 2, 23, tzinfo=timezone.utc)
 
-CLAUDE_MODEL = "claude-sonnet-4-6"
+MODELS = {
+    "sonnet": "claude-sonnet-4-6",
+    "opus": "claude-opus-4-6",
+}
+DEFAULT_MODEL = "sonnet"
+CLAUDE_MODEL = MODELS[DEFAULT_MODEL]  # set by main() via --model flag
 
 RANK_GREEN_THRESHOLD = 300
 RANK_YELLOW_THRESHOLD = 1500
@@ -673,6 +678,7 @@ def main():
 Examples:
   contexto-solver                      # today's game
   contexto-solver --game 1200          # specific game
+  contexto-solver --model opus         # use Claude Opus
   contexto-solver --game 1200 --max-guesses 100
   contexto-solver --lang pt            # Portuguese
         """,
@@ -683,9 +689,16 @@ Examples:
                         help="Max guesses (default: 200)")
     parser.add_argument("--lang", "-l", type=str, default="en", choices=["en", "pt", "es"],
                         help="Language (default: en)")
+    parser.add_argument("--model", type=str, default=DEFAULT_MODEL,
+                        choices=MODELS.keys(),
+                        help=f"Claude model to use (default: {DEFAULT_MODEL})")
     parser.add_argument("--api-key", "-k", type=str, default=None,
                         help="Anthropic API key (default: from .env)")
     args = parser.parse_args()
+
+    # Set the model globally
+    global CLAUDE_MODEL
+    CLAUDE_MODEL = MODELS[args.model]
 
     api_key = args.api_key or os.environ.get("API_KEY")
     if not api_key:

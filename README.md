@@ -116,18 +116,21 @@ Wordle uses calendar dates instead of game numbers:
 ```bash
 contexto-solver                          # solve today's game
 contexto-solver --game 1200              # solve a specific game
+contexto-solver --model opus             # use Claude Opus instead of Sonnet
 contexto-solver --game 1200 --max-guesses 100
 contexto-solver --lang pt                # Portuguese
-contexto-solver --api-key sk-ant-...     # pass key directly (optional)
 ```
 
 ### Wordle
 ```bash
 wordle-solver                            # solve today's puzzle
 wordle-solver --date 2026-01-15          # solve a specific date
+wordle-solver --model opus               # use Claude Opus instead of Sonnet
 wordle-solver --hard                     # hard mode
 wordle-solver --date 2026-01-15 --hard   # specific date + hard mode
 ```
+
+> Both solvers default to **Claude Sonnet 4.6**. Use `--model opus` for Claude Opus 4.6.
 
 ---
 
