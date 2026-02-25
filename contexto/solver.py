@@ -44,7 +44,7 @@ from rich import box
 CONTEXTO_BASE_URL = "https://api.contexto.me/machado/{lang}/game/{game_id}/{word}"
 
 ANCHOR_GAME_ID = 1256
-ANCHOR_DATE = datetime(2026, 2, 23, tzinfo=timezone.utc)
+ANCHOR_DATE = datetime(2026, 2, 25, tzinfo=timezone.utc)
 
 MODELS = {
     "sonnet": "claude-sonnet-4-6",
@@ -499,6 +499,7 @@ def solve(game_id: int, lang: str, max_guesses: int, api_key: str):
     status_messages: list[str] = []
     start_time = time.time()
     guess_number = 0
+    seed_count = 0
     found = False
     phase = "Phase 1: Broad Probes"
     best_distance = float("inf")
@@ -509,7 +510,7 @@ def solve(game_id: int, lang: str, max_guesses: int, api_key: str):
 
     def do_guess(word: str) -> dict | None:
         """Submit a guess to Contexto and track results."""
-        nonlocal guess_number, found, best_distance, guesses_since_improvement
+        nonlocal guess_number, seed_count, found, best_distance, guesses_since_improvement
         guess_number += 1
         result = guess_word(game_id, word, lang)
         time.sleep(REQUEST_DELAY)
@@ -550,18 +551,22 @@ def solve(game_id: int, lang: str, max_guesses: int, api_key: str):
             for seed in SEED_WORDS:
                 if found:
                     break
+                if best_distance <= 10:
+                    status_messages.append(f"Seed hit d={best_distance}, skipping remaining seeds")
+                    break
                 if seed in attempted:
                     continue
                 refresh(f"Probing: {seed}")
                 do_guess(seed)
-                refresh(f"Probed {len(attempted)}/{len(SEED_WORDS)} seeds")
+                seed_count += 1
+                refresh(f"Probed {seed_count}/{len(SEED_WORDS)} seeds")
 
             # ── Phase 2: Claude-guided batch search with stuck detection ─────
             if not found:
                 phase = "Phase 2: Claude Search"
                 pivot_cooldown = 0
 
-                while not found and guess_number < max_guesses:
+                while not found and (guess_number - seed_count) < max_guesses:
                     is_stuck = guesses_since_improvement >= STUCK_THRESHOLD and best_distance > 50
                     pivot_hint = None
 
@@ -597,7 +602,7 @@ def solve(game_id: int, lang: str, max_guesses: int, api_key: str):
 
                     # Submit each word in the batch rapidly
                     for word in words:
-                        if found or guess_number >= max_guesses:
+                        if found or (guess_number - seed_count) >= max_guesses:
                             break
                         if word in attempted:
                             continue
@@ -633,8 +638,10 @@ def solve(game_id: int, lang: str, max_guesses: int, api_key: str):
         console.rule("[bold cyan]Contexto Solver — Results[/bold cyan]")
     console.print()
 
+    claude_guesses = guess_number - seed_count
+
     if interrupted:
-        console.print(f"  [yellow]Stopped by user after {guess_number} guesses.[/yellow]")
+        console.print(f"  [yellow]Stopped by user after {claude_guesses} guesses (+{seed_count} seeds).[/yellow]")
         console.print(f"  Game    : [cyan]#{game_id}[/cyan]")
         console.print(f"  Time    : [cyan]{elapsed:.1f}s[/cyan]")
         if guesses:
@@ -644,7 +651,7 @@ def solve(game_id: int, lang: str, max_guesses: int, api_key: str):
         winner = sorted(guesses, key=lambda x: x["distance"])[0]
         console.print(f"  [bold green]SOLVED![/bold green] The word was: [bold green]{winner['word'].upper()}[/bold green]")
         console.print(f"  Game    : [cyan]#{game_id}[/cyan]")
-        console.print(f"  Guesses : [cyan]{guess_number}[/cyan]")
+        console.print(f"  Guesses : [cyan]{claude_guesses}[/cyan] [dim](+{seed_count} seeds)[/dim]")
         console.print(f"  Time    : [cyan]{elapsed:.1f}s[/cyan]")
         console.print(f"  Model   : [cyan]{CLAUDE_MODEL}[/cyan]")
         console.print()
@@ -656,7 +663,7 @@ def solve(game_id: int, lang: str, max_guesses: int, api_key: str):
         console.print(f"  [yellow]{'█' * min(yellow_count, 20)}[/yellow] {yellow_count} yellow")
         console.print(f"  [red]{'█' * min(red_count, 20)}[/red] {red_count} red")
     else:
-        console.print(f"  [red]Did not solve in {max_guesses} guesses.[/red]")
+        console.print(f"  [red]Did not solve in {max_guesses} Claude guesses (+{seed_count} seeds).[/red]")
         console.print(f"  Game    : [cyan]#{game_id}[/cyan]")
         console.print(f"  Time    : [cyan]{elapsed:.1f}s[/cyan]")
 
@@ -664,7 +671,7 @@ def solve(game_id: int, lang: str, max_guesses: int, api_key: str):
     console.print(build_leaderboard(guesses, count=15))
     console.print()
 
-    return found, guess_number, guesses
+    return found, claude_guesses, seed_count, guesses
 
 
 # ─────────────────────────────────────────────────────────────────────────────
